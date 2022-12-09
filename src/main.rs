@@ -129,14 +129,20 @@ fn gen_perms(data: &[i32]) -> Vec<RecurseState> {
         .collect()
 }
 
-fn solve(problem: &[i32]) -> String {
+fn solve(problem: &[i32]) -> (String, u32) {
     let mut nodes = gen_perms(&problem);
+
+    let mut num_sols = 0u32;
+    let mut sol = String::from("No solution");
 
     while let Some(n) = nodes.pop() {
         if n.len() == 1 {
             if n[0].value == Frac::from(TARGET) {
                 // Solved!
-                return n[0].repr.clone();
+                num_sols += 1;
+                if num_sols == 1 {
+                    sol = n[0].repr.clone();
+                }
             }
         } else {
             for i in 0..=(n.len() - 2) {
@@ -144,12 +150,20 @@ fn solve(problem: &[i32]) -> String {
                     let x1 = &n[i];
                     let x2 = &n[i + 1];
                     if let Some(op_res) = op(x1, x2) {
+                        // With negation
                         let mut new_node: RecurseState = Vec::new();
-
                         new_node.extend_from_slice(&n[0..i]);
-                        new_node.push(op_res);
+                        new_node.push(RecurseNum {
+                            value: -op_res.value,
+                            repr: format!("-{}", op_res.repr),
+                        });
                         new_node.extend_from_slice(&n[(i + 2)..]);
-
+                        nodes.push(new_node);
+                        // Original
+                        let mut new_node: RecurseState = Vec::new();
+                        new_node.extend_from_slice(&n[0..i]);
+                        new_node.push(op_res.clone());
+                        new_node.extend_from_slice(&n[(i + 2)..]);
                         nodes.push(new_node);
                     }
                 }
@@ -157,11 +171,13 @@ fn solve(problem: &[i32]) -> String {
         }
     }
 
-    return String::from("No solution");
+    return (sol, num_sols);
 }
 
 fn main() {
     println!("Enter 4 numbers seperated with spaces");
 
-    println!("{}", solve(&[read!(), read!(), read!(), read!()]));
+    let res = solve(&[read!(), read!(), read!(), read!()]);
+
+    println!("{}\nNumber of solutions: {}", res.0, res.1);
 }
