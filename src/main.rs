@@ -2,11 +2,11 @@ mod ops;
 mod perms;
 mod types;
 
-use ops::OPS;
+use ops::{perform_op, OPS};
 use perms::gen_perms;
 use text_io::read;
 
-use crate::types::{Frac, RecurseNum, RecurseState};
+use crate::types::Frac;
 
 const TARGET: i32 = 10;
 
@@ -28,31 +28,9 @@ fn solve(problem: &[i32]) -> (String, u32) {
         } else {
             for i in 0..=(n.len() - 2) {
                 for op in OPS {
-                    let x1 = &n[i];
-                    let x2 = &n[i + 1];
-                    if let Some(op_res) = op(x1, x2) {
-                        // With negation (powers only)
-                        if let Some(negated) = std::panic::catch_unwind(|| {
-                            let mut new_node: RecurseState = Vec::new();
-                            new_node.extend_from_slice(&n[0..i]);
-                            new_node.push(RecurseNum {
-                                value: -op_res.value,
-                                repr: format!("-{}", op_res.repr),
-                            });
-                            new_node.extend_from_slice(&n[(i + 2)..]);
-                            new_node
-                        })
-                        .ok()
-                        {
-                            nodes.push(negated);
-                        }
-                        // Original
-                        let mut new_node: RecurseState = Vec::new();
-                        new_node.extend_from_slice(&n[0..i]);
-                        new_node.push(op_res.clone());
-                        new_node.extend_from_slice(&n[(i + 2)..]);
-                        nodes.push(new_node);
-                    }
+                    let new_res = perform_op(op, &n, i);
+
+                    nodes.extend(new_res.into_iter());
                 }
             }
         }
