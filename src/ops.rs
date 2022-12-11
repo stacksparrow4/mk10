@@ -1,6 +1,9 @@
 use num::{CheckedAdd, CheckedDiv, CheckedMul, Zero};
 
-use crate::types::{Frac, RecurseNum, RecurseState};
+use crate::{
+    panic::catch_unwind_silent,
+    types::{Frac, RecurseNum, RecurseState},
+};
 
 pub fn op_add(x1: &RecurseNum, x2: &RecurseNum) -> Option<RecurseNum> {
     x1.value.checked_add(&x2.value).map(|x| RecurseNum {
@@ -27,7 +30,7 @@ pub fn op_pow(x1: &RecurseNum, x2: &RecurseNum) -> Option<RecurseNum> {
     if !x2.value.is_integer() {
         None
     } else {
-        std::panic::catch_unwind(|| RecurseNum {
+        catch_unwind_silent(|| RecurseNum {
             value: if x2.value.is_zero() {
                 Frac::from(1)
             } else if x1.value.is_zero() {
@@ -49,7 +52,7 @@ pub fn perform_op(op: &Op, state: &RecurseState, op_index: usize) -> Vec<Recurse
     if let Some(op_res) = (op.op)(x1, x2) {
         // With negation (only for some operations)
         if op.needs_negate {
-            if let Some(negated) = std::panic::catch_unwind(|| {
+            if let Some(negated) = catch_unwind_silent(|| {
                 let mut new_node: RecurseState = Vec::new();
                 new_node.extend_from_slice(&state[0..op_index]);
                 new_node.push(RecurseNum {

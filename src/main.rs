@@ -1,4 +1,5 @@
 mod ops;
+mod panic;
 mod perms;
 mod types;
 
@@ -40,10 +41,7 @@ fn solve(problem: &[i32]) -> (String, u32) {
 }
 
 fn main() {
-    std::panic::set_hook(Box::new(|_info| {
-        // do nothing
-    }));
-
+    //// Brute force every combination
     // for a in 0..10 {
     //     for b in 0..10 {
     //         for c in 0..10 {
@@ -55,6 +53,7 @@ fn main() {
     //     }
     // }
 
+    // Input mode
     println!("Enter 4 numbers seperated with spaces");
 
     let res = solve(&[read!(), read!(), read!(), read!()]);
