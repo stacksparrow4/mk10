@@ -1,6 +1,6 @@
 use std::iter;
 
-use num::{rational::Rational32, CheckedAdd, CheckedDiv, CheckedMul, Signed};
+use num::{rational::Rational32, CheckedAdd, CheckedDiv, CheckedMul, Zero};
 use text_io::read;
 
 type Frac = Rational32;
@@ -37,33 +37,21 @@ fn op_div(x1: &RecurseNum, x2: &RecurseNum) -> Option<RecurseNum> {
 }
 
 fn op_pow(x1: &RecurseNum, x2: &RecurseNum) -> Option<RecurseNum> {
-    if !x2.value.is_integer()
-        || (x1.value != Frac::from(1)
-            && x2.value != Frac::from(1)
-            && (x1.value.abs() > Frac::from(10) || x2.value.abs() > Frac::from(5)))
-    {
-        return None;
+    if !x2.value.is_integer() {
+        None
+    } else {
+        std::panic::catch_unwind(|| RecurseNum {
+            value: if x2.value.is_zero() {
+                Frac::from(1)
+            } else if x1.value.is_zero() {
+                Frac::from(0)
+            } else {
+                x1.value.pow(x2.value.to_integer())
+            },
+            repr: format!("({} ** {})", x1.repr, x2.repr),
+        })
+        .ok()
     }
-
-    let repr = format!("({} ** {})", x1.repr, x2.repr);
-
-    if x2.value == Frac::from(0) {
-        return Some(RecurseNum {
-            value: Frac::from(1),
-            repr: repr,
-        });
-    }
-    if x1.value == Frac::from(0) {
-        return Some(RecurseNum {
-            value: Frac::from(0),
-            repr: repr,
-        });
-    }
-
-    return Some(RecurseNum {
-        value: x1.value.pow(x2.value.to_integer()),
-        repr: repr,
-    });
 }
 
 const OPS: &'static [fn(&RecurseNum, &RecurseNum) -> Option<RecurseNum>] =
@@ -150,15 +138,21 @@ fn solve(problem: &[i32]) -> (String, u32) {
                     let x1 = &n[i];
                     let x2 = &n[i + 1];
                     if let Some(op_res) = op(x1, x2) {
-                        // With negation
-                        let mut new_node: RecurseState = Vec::new();
-                        new_node.extend_from_slice(&n[0..i]);
-                        new_node.push(RecurseNum {
-                            value: -op_res.value,
-                            repr: format!("-{}", op_res.repr),
-                        });
-                        new_node.extend_from_slice(&n[(i + 2)..]);
-                        nodes.push(new_node);
+                        // With negation (powers only)
+                        if let Some(negated) = std::panic::catch_unwind(|| {
+                            let mut new_node: RecurseState = Vec::new();
+                            new_node.extend_from_slice(&n[0..i]);
+                            new_node.push(RecurseNum {
+                                value: -op_res.value,
+                                repr: format!("-{}", op_res.repr),
+                            });
+                            new_node.extend_from_slice(&n[(i + 2)..]);
+                            new_node
+                        })
+                        .ok()
+                        {
+                            nodes.push(negated);
+                        }
                         // Original
                         let mut new_node: RecurseState = Vec::new();
                         new_node.extend_from_slice(&n[0..i]);
@@ -175,6 +169,21 @@ fn solve(problem: &[i32]) -> (String, u32) {
 }
 
 fn main() {
+    std::panic::set_hook(Box::new(|_info| {
+        // do nothing
+    }));
+
+    // for a in 0..10 {
+    //     for b in 0..10 {
+    //         for c in 0..10 {
+    //             for d in 0..10 {
+    //                 let res = solve(&[a, b, c, d]);
+    //                 println!("{}\t{} {} {} {}", res.1, a, b, c, d);
+    //             }
+    //         }
+    //     }
+    // }
+
     println!("Enter 4 numbers seperated with spaces");
 
     let res = solve(&[read!(), read!(), read!(), read!()]);
