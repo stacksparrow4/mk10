@@ -19,11 +19,11 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub fn solve_problem(a: i32, b: i32, c: i32, d: i32) {
+pub fn solve_problem(a: i32, b: i32, c: i32, d: i32) -> String {
     console_error_panic_hook::set_once();
 
     let v = vec![a, b, c, d];
     let (sol, _) = solve(&v, 10);
-    alert(&sol);
-    // alert("123");
+
+    sol
 }

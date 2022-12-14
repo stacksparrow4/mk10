@@ -1,7 +1,6 @@
-use num::{CheckedAdd, CheckedDiv, CheckedMul, Signed, Zero};
+use num::{CheckedAdd, CheckedDiv, CheckedMul};
 
 use crate::{
-    alert,
     math::frac_pow,
     types::{Frac, RecurseNum, RecurseState},
 };

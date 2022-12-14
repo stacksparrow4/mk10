@@ -30,11 +30,11 @@ pub fn recurse_signs(data: &[i32]) -> Vec<Vec<i32>> {
 
         ret.extend(
             next.iter()
-                .map(|d| iter::once(data[0]).chain(d.iter().map(|x| *x)).collect()),
+                .map(|d| iter::once(-data[0]).chain(d.iter().map(|x| *x)).collect()),
         );
         ret.extend(
             next.iter()
-                .map(|d| iter::once(-data[0]).chain(d.iter().map(|x| *x)).collect()),
+                .map(|d| iter::once(data[0]).chain(d.iter().map(|x| *x)).collect()),
         );
 
         ret
