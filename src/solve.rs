@@ -15,7 +15,7 @@ pub fn solve(problem: &[i32], target: i32) -> (String, u32) {
                 // Solved!
                 num_sols += 1;
                 if num_sols == 1 {
-                    sol = n[0].repr.clone();
+                    sol = format!("Possible solution: {}", n[0].repr);
                 }
             }
         } else {

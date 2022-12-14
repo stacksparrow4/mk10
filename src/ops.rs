@@ -1,4 +1,4 @@
-use num::{CheckedAdd, CheckedDiv, CheckedMul};
+use num::{CheckedAdd, CheckedDiv, CheckedMul, CheckedSub, Zero};
 
 use crate::{
     math::frac_pow,
@@ -45,15 +45,17 @@ pub fn perform_op(op: &Op, state: &RecurseState, op_index: usize) -> Vec<Recurse
     if let Some(op_res) = (op.op)(x1, x2) {
         // With negation (only for some operations)
         if op.needs_negate {
-            let mut negated: RecurseState = Vec::new();
-            negated.extend_from_slice(&state[0..op_index]);
-            negated.push(RecurseNum {
-                value: -op_res.value,
-                repr: format!("-{}", op_res.repr),
-            });
-            negated.extend_from_slice(&state[(op_index + 2)..]);
+            if let Some(neg_val) = Frac::zero().checked_sub(&op_res.value) {
+                let mut negated: RecurseState = Vec::new();
+                negated.extend_from_slice(&state[0..op_index]);
+                negated.push(RecurseNum {
+                    value: neg_val,
+                    repr: format!("-{}", op_res.repr),
+                });
+                negated.extend_from_slice(&state[(op_index + 2)..]);
 
-            ret.push(negated);
+                ret.push(negated);
+            }
         }
         // Original
         let mut new_node: RecurseState = Vec::new();
