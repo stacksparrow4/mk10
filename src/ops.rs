@@ -1,7 +1,8 @@
-use num::{CheckedAdd, CheckedDiv, CheckedMul, Zero};
+use num::{CheckedAdd, CheckedDiv, CheckedMul, Signed, Zero};
 
 use crate::{
-    panic::catch_unwind_silent,
+    alert,
+    math::frac_pow,
     types::{Frac, RecurseNum, RecurseState},
 };
 
@@ -20,28 +21,21 @@ pub fn op_mul(x1: &RecurseNum, x2: &RecurseNum) -> Option<RecurseNum> {
 }
 
 pub fn op_div(x1: &RecurseNum, x2: &RecurseNum) -> Option<RecurseNum> {
-    x1.value.checked_div(&x2.value).map(|x| RecurseNum {
-        value: x,
-        repr: format!("({} / {})", x1.repr, x2.repr),
-    })
+    if x2.value == Frac::from(0) {
+        None
+    } else {
+        x1.value.checked_div(&x2.value).map(|x| RecurseNum {
+            value: x,
+            repr: format!("({} / {})", x1.repr, x2.repr),
+        })
+    }
 }
 
 pub fn op_pow(x1: &RecurseNum, x2: &RecurseNum) -> Option<RecurseNum> {
-    if !x2.value.is_integer() {
-        None
-    } else {
-        catch_unwind_silent(|| RecurseNum {
-            value: if x2.value.is_zero() {
-                Frac::from(1)
-            } else if x1.value.is_zero() {
-                Frac::from(0)
-            } else {
-                x1.value.pow(x2.value.to_integer())
-            },
-            repr: format!("(({}) ** {})", x1.repr, x2.repr),
-        })
-        .ok()
-    }
+    frac_pow(x1.value, x2.value).map(|x| RecurseNum {
+        value: x,
+        repr: format!("(({}) ** {})", x1.repr, x2.repr),
+    })
 }
 
 pub fn perform_op(op: &Op, state: &RecurseState, op_index: usize) -> Vec<RecurseState> {
@@ -52,20 +46,15 @@ pub fn perform_op(op: &Op, state: &RecurseState, op_index: usize) -> Vec<Recurse
     if let Some(op_res) = (op.op)(x1, x2) {
         // With negation (only for some operations)
         if op.needs_negate {
-            if let Some(negated) = catch_unwind_silent(|| {
-                let mut new_node: RecurseState = Vec::new();
-                new_node.extend_from_slice(&state[0..op_index]);
-                new_node.push(RecurseNum {
-                    value: -op_res.value,
-                    repr: format!("-{}", op_res.repr),
-                });
-                new_node.extend_from_slice(&state[(op_index + 2)..]);
-                new_node
-            })
-            .ok()
-            {
-                ret.push(negated);
-            }
+            let mut negated: RecurseState = Vec::new();
+            negated.extend_from_slice(&state[0..op_index]);
+            negated.push(RecurseNum {
+                value: -op_res.value,
+                repr: format!("-{}", op_res.repr),
+            });
+            negated.extend_from_slice(&state[(op_index + 2)..]);
+
+            ret.push(negated);
         }
         // Original
         let mut new_node: RecurseState = Vec::new();
