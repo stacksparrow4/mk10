@@ -1,3 +1,5 @@
+Online version here: [https://stacksparrow4.github.io/mk10/ghpages/](https://stacksparrow4.github.io/mk10/ghpages/)
+
 Simple make 10 brute forcer adhering to the following rules:
 
 - A four digit number is given as input
