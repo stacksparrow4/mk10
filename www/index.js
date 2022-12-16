@@ -7,14 +7,11 @@ const solution = document.getElementById("solution");
 solvebtn.onclick = () => {
   const data = problem.value;
 
-  if (!/^[0-9]{4}$/.test(data)) {
+  if (!/^[0-9]+$/.test(data)) {
     solution.innerText = "Invalid number!";
   } else {
     solution.innerText = wasm.solve_problem(
-      parseInt(data[0]),
-      parseInt(data[1]),
-      parseInt(data[2]),
-      parseInt(data[3])
+      new Int32Array(data.split("").map((x) => parseInt(x)))
     );
   }
 };
